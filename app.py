@@ -39,7 +39,7 @@ def analyze_generated_images(images):
     }
 
 def load_generator_model():
-    return tf.keras.models.load_model("app/models/generator.keras", compile=False)
+    return tf.keras.models.load_model("models/generator.keras", compile=False)
 
 def main():
     st.set_page_config(
