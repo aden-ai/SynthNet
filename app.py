@@ -134,7 +134,7 @@ def main():
                 
                 with col1:
                     for key, value in list(stats.items())[:1]:
-                        st.metric(key, f"{value:.2f}")
+                        st.metric(key, f"{int(value)}")
                 with col2:
                     for key, value in list(stats.items())[1:2]:
                         st.metric(key, f"{value:.2f}")
