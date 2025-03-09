@@ -109,32 +109,6 @@ The project includes a Streamlit-based web application for generating and visual
 3. **Machine Learning Research**: Study generative model behavior.
 4. **Educational Tool**: Demonstrate generative adversarial network principles.
 
-## Project Structure
-
-```
-SynthNet/
-├── app.py                         # Streamlit web application
-├── requirements.txt               # Project dependencies
-├── README.md                      # Project documentation
-├── .gitignore                     # Git ignore file
-├── .streamlit/
-│   └── config.toml                # Streamlit configuration
-├── models/
-│   ├── generator.keras            # Saved generator model
-│   ├── discriminator.keras        # Saved discriminator model
-│   └── config.json                # Model configuration
-├── training/
-│   ├── cont_training.py           # Script for continuing GAN training
-│   ├── dataset.py                 # Dataset preparation script
-│   ├── gan.py                     # DCGAN model definition
-│   ├── generate_synthetic_data.py # Script for generating synthetic data
-│   ├── load_model.py              # Script for loading GAN model
-│   ├── train_gan.py               # Script for training GAN model
-│   └── visualize_syn_data.py      # Script for visualizing synthetic data
-└── images/
-    └── banner.png                 # Banner image for Streamlit app
-```
-
 ## Dependencies
 
 - TensorFlow
