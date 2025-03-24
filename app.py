@@ -176,6 +176,7 @@ def main():
                     num_images
                 )
                 st.subheader("Generated Images")
+
                 image_buffer = plot_generated_images(images, st.session_state.current_dataset)
                 st.image(image_buffer)
                 
@@ -199,6 +200,7 @@ def main():
                 with col5:
                     for key, value in list(stats.items())[4:]:
                         st.metric(key, f"{value:.2f}")
+
                 import zipfile
 
                 # Create ZIP in-memory
@@ -216,6 +218,7 @@ def main():
                     data=zip_buffer,
                     file_name="generated_images.zip",
                     mime="application/zip"
+)
             
             except Exception as e:
                 st.error(f"Error Generating Images: {e}")
