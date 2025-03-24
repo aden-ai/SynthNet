@@ -11,7 +11,7 @@ def generate_synthetic_data(generator, num_samples=1000, latent_dim=128):
     generated_images = ((generated_images + 1) * 127.5).numpy().astype('uint8')
     return generated_images
 
-def plot_generated_images(images):
+def plot_generated_images(images, dataset_type="mnist"):
     num_images = len(images)
     cols = min(5, num_images)
     rows = (num_images - 1) // cols + 1
@@ -19,7 +19,11 @@ def plot_generated_images(images):
     plt.figure(figsize=(15, 3 * rows))
     for i in range(num_images):
         plt.subplot(rows, cols, i + 1)
-        plt.imshow(images[i, :, :, 0], cmap='gray')
+        # For RGB images (Fashion MNIST might be displayed in color)
+        if images.shape[-1] == 3:
+            plt.imshow(images[i])
+        else:
+            plt.imshow(images[i, :, :, 0], cmap='gray')
         plt.axis('off')
     plt.tight_layout()
     
@@ -38,12 +42,12 @@ def analyze_generated_images(images):
         "Max Pixel Value": np.max(images)
     }
 
-def load_generator_model():
-    return tf.keras.models.load_model("models/generator.keras", compile=False)
+def load_generator_model(model_path):
+    return tf.keras.models.load_model(model_path, compile=False)
 
 def main():
     st.set_page_config(
-        page_title="SynthNet: MNIST GAN Generator",
+        page_title="SynthNet: MNIST-Dataset Generator",
         page_icon="🤖",
         layout="wide",
         initial_sidebar_state="expanded",
@@ -74,40 +78,84 @@ def main():
     </style>
     """, unsafe_allow_html=True)
     
-    st.title("🤖 SynthNet: MNIST Digit Generator")
+    st.title("🤖 SynthNet: MNIST-Dataset Generator")
     st.markdown("""
-    ### Synthetic Digit Generation using Deep Convolutional Generative Adversarial Network
+    ### Synthetic Data Generation using Deep Convolutional Generative Adversarial Networks
     
-    Generate realistic handwritten digits using advanced machine learning techniques.
+    Generate realistic synthetic images from MNIST datasets using advanced machine learning techniques.
     """)
 
     image = Image.open("images/banner.png")
     st.image(image, caption="Sample Generated Images")
     
-    # Initialize session state for generator
-    if 'generator' not in st.session_state:
-        st.session_state.generator = None
+    # Initialize session state for generators
+    if 'current_generator' not in st.session_state:
+        st.session_state.current_generator = None
+    if 'current_dataset' not in st.session_state:
+        st.session_state.current_dataset = None
+    
+    # Dataset descriptions
+    dataset_info = {
+        "mnist": {
+            "title": "MNIST Digits",
+            "description": "Classic handwritten digits (0-9)",
+            "model_path": "models/generator.keras",
+            "icon": "🔢"
+        },
+        "fmnist": {
+            "title": "Fashion MNIST",
+            "description": "Fashion items like shirts, shoes, etc.",
+            "model_path": "models/fmnist_generator_model.keras",
+            "icon": "👕"
+        },
+        "emnist": {
+            "title": "Extended MNIST",
+            "description": "Handwritten digits and letters",
+            "model_path": "models/emnist_generator_model.keras",
+            "icon": "🔤"
+        }
+    }
         
     st.markdown("---")
     st.header("Image Generation")
 
-    st.sidebar.header("🛠️ Model Configuration")
-
-    # Dynamically show load button only if model is not loaded
-    if st.session_state.generator is None:
-        if st.sidebar.button("🚀 Initialize GAN Generator"):
+    st.sidebar.header("🛠️ Model Selection")
+    
+    # Create radio buttons for dataset selection
+    dataset_options = [f"{info['icon']} {info['title']}" for ds, info in dataset_info.items()]
+    dataset_keys = list(dataset_info.keys())
+    
+    selected_dataset_index = st.sidebar.radio(
+        "Select Dataset",
+        options=range(len(dataset_options)),
+        format_func=lambda x: dataset_options[x]
+    )
+    
+    selected_dataset = dataset_keys[selected_dataset_index]
+    
+    # Display dataset description
+    st.sidebar.markdown(f"**Description:** {dataset_info[selected_dataset]['description']}")
+    
+    # Load model button
+    if st.session_state.current_dataset != selected_dataset or st.session_state.current_generator is None:
+        if st.sidebar.button(f"🚀 Load {dataset_info[selected_dataset]['title']} Generator"):
             try:
-                st.session_state.generator = load_generator_model()
-                st.rerun()  # Rerun to update the sidebar
+                model_path = dataset_info[selected_dataset]['model_path']
+                st.session_state.current_generator = load_generator_model(model_path)
+                st.session_state.current_dataset = selected_dataset
+                st.sidebar.success(f"✅ {dataset_info[selected_dataset]['title']} model loaded successfully!")
             except Exception as e:
                 st.sidebar.error(f"🚨 Model Initialization Failed: {e}")
     else:
-        #Optional unload button if you want to reset
+        st.sidebar.success(f"✅ {dataset_info[selected_dataset]['title']} model loaded")
+        
+        # Optional unload button
         if st.sidebar.button("🔌 Unload Model"):
-            st.session_state.generator = None
+            st.session_state.current_generator = None
+            st.session_state.current_dataset = None
             st.rerun()
 
-    st.sidebar.markdown("<br>", unsafe_allow_html=True)  # Adds two line breaks
+    st.sidebar.markdown("<br>", unsafe_allow_html=True)  # Adds a line break
 
     num_images = st.sidebar.slider(
         "Number of Images to Generate", 
@@ -116,15 +164,19 @@ def main():
         value=10
     )
 
-    if st.button("Generate Synthetic Digits"):
-        if st.session_state.generator is not None:
+    # Display dataset-specific title in the main area
+    if st.session_state.current_dataset:
+        st.subheader(f"Generate {dataset_info[st.session_state.current_dataset]['icon']} {dataset_info[st.session_state.current_dataset]['title']}")
+    
+    if st.button("Generate Synthetic Images"):
+        if st.session_state.current_generator is not None:
             try:
                 images = generate_synthetic_data(
-                    st.session_state.generator, 
+                    st.session_state.current_generator, 
                     num_images
                 )
-                st.subheader("Generated Digits")
-                image_buffer = plot_generated_images(images)
+                st.subheader("Generated Images")
+                image_buffer = plot_generated_images(images, st.session_state.current_dataset)
                 st.image(image_buffer)
                 
                 st.subheader("Image Analysis")
@@ -151,19 +203,22 @@ def main():
             except Exception as e:
                 st.error(f"Error Generating Images: {e}")
         else:
-            st.warning("Please load the model first!")
+            st.warning(f"Please load the {dataset_info[selected_dataset]['title']} model first!")
     
     st.sidebar.header("📖 About SynthNet")
-    st.sidebar.info("""
-    SynthNet is a Deep Convolutional GAN for generating synthetic MNIST digits.
+    st.sidebar.info(f"""
+    SynthNet is a Deep Convolutional GAN for generating synthetic images from MNIST datasets.
+    
+    Available Datasets:
+    - {dataset_info['mnist']['icon']} {dataset_info['mnist']['title']}: {dataset_info['mnist']['description']}
+    - {dataset_info['fmnist']['icon']} {dataset_info['fmnist']['title']}: {dataset_info['fmnist']['description']}
+    - {dataset_info['emnist']['icon']} {dataset_info['emnist']['title']}: {dataset_info['emnist']['description']}
     
     Key Features:
-    - High-quality digit generation
+    - High-quality image generation
+    - Multiple MNIST dataset support
     - Configurable latent space
     - Advanced machine learning techniques
     """)
 
-
-# if __name__ == "__main__":
-#     main()
 main()
