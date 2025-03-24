@@ -103,13 +103,13 @@ def main():
             "icon": "🔢"
         },
         "fmnist": {
-            "title": "Fashion MNIST",
+            "title": "Fashion MNIST (fine-tuned)",
             "description": "Fashion items like shirts, shoes, etc.",
             "model_path": "models/fmnist_generator_model.keras",
             "icon": "👕"
         },
         "emnist": {
-            "title": "Extended MNIST",
+            "title": "Extended MNIST (fine-tuned)",
             "description": "Handwritten digits and letters",
             "model_path": "models/emnist_generator_model.keras",
             "icon": "🔤"
