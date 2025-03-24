@@ -199,6 +199,23 @@ def main():
                 with col5:
                     for key, value in list(stats.items())[4:]:
                         st.metric(key, f"{value:.2f}")
+                import zipfile
+
+                # Create ZIP in-memory
+                zip_buffer = io.BytesIO()
+                with zipfile.ZipFile(zip_buffer, "w") as zip_file:
+                    for i, img in enumerate(images):
+                        img_pil = Image.fromarray(img.squeeze())  # Handles grayscale or RGB
+                        img_byte_arr = io.BytesIO()
+                        img_pil.save(img_byte_arr, format='PNG')
+                        zip_file.writestr(f"image_{i + 1}.png", img_byte_arr.getvalue())
+                zip_buffer.seek(0)
+
+                st.download_button(
+                    label="📦 Download Images as ZIP",
+                    data=zip_buffer,
+                    file_name="generated_images.zip",
+                    mime="application/zip"
             
             except Exception as e:
                 st.error(f"Error Generating Images: {e}")
